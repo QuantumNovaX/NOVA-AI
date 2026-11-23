@@ -13,98 +13,92 @@ st.set_page_config(
 # ---------- PREMIUM DESIGN ----------
 st.markdown("""
 <style>
-/* NOVA-AI — soft neutral theme with strong text contrast */
-:root {
-    color-scheme: light;
-}
+/* NOVA-AI — clean black theme, crisp white typography */
 .stApp {
-    background: #eef1f5;
-    color: #182230;
+    background: #050607;
+    color: #f5f7fa;
 }
 [data-testid="stHeader"] {
-    background: rgba(238, 241, 245, 0.96);
+    background: rgba(5, 6, 7, 0.96);
 }
 [data-testid="stSidebar"] {
-    background: #e5eaf0;
-    border-right: 1px solid #cbd3dd;
+    background: #0b0d10;
+    border-right: 1px solid #252a31;
 }
 [data-testid="stSidebar"] * {
-    color: #182230 !important;
+    color: #f1f3f5 !important;
 }
-.stApp, .stApp p, .stApp label, .stApp span,
-.stApp li, .stApp [data-testid="stMarkdownContainer"] {
-    color: #182230;
+.stApp p, .stApp label, .stApp li,
+.stApp [data-testid="stMarkdownContainer"] {
+    color: #f1f3f5;
 }
 h1, h2, h3, h4 {
-    color: #142235 !important;
+    color: #ffffff !important;
 }
+/* Keep the existing NOVA-AI logo/title styling untouched. */
 .nova-title {
     text-align: center;
-    font-size: clamp(36px, 5vw, 50px);
-    font-weight: 750;
-    letter-spacing: -1.5px;
-    color: #142235 !important;
-    margin-top: 0.25rem;
+    font-size: 52px;
+    font-weight: 900;
+    background: linear-gradient(90deg,#a879ff,#48c9ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 .subtitle {
     text-align: center;
-    color: #526174 !important;
+    color: #b8c0cc !important;
     letter-spacing: 2px;
-    font-size: 11px;
-    font-weight: 650;
 }
 div.stButton > button {
-    background: #24445f;
+    background: #171b21;
     color: #ffffff !important;
-    border: 1px solid #24445f;
+    border: 1px solid #343b46;
     border-radius: 10px;
-    min-height: 42px;
+    width: 100%;
     font-weight: 600;
 }
 div.stButton > button:hover {
-    background: #315c7d;
-    border-color: #315c7d;
+    background: #252c35;
+    border-color: #657184;
+    color: #ffffff !important;
 }
 div[data-testid="stChatMessage"] {
-    background: #f9fafb;
-    border: 1px solid #d6dde6;
+    background: #101317;
+    border: 1px solid #272d36;
     border-radius: 14px;
-    padding: 0.85rem 1rem;
 }
 div[data-testid="stChatMessage"] * {
-    color: #182230 !important;
+    color: #f1f3f5 !important;
 }
 [data-testid="stChatInput"] {
-    background: #ffffff;
-    border: 1px solid #cbd3dd;
+    background: #101317;
+    border: 1px solid #343b46;
     border-radius: 12px;
 }
 [data-testid="stChatInput"] textarea {
-    color: #182230 !important;
-    -webkit-text-fill-color: #182230 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 [data-testid="stTextInput"] input,
-[data-testid="stSelectbox"] div,
-[data-testid="stFileUploader"] {
-    color: #182230 !important;
+[data-testid="stSelectbox"] div {
+    color: #ffffff !important;
 }
-[data-testid="stTextInput"] input,
 [data-testid="stTextInput"] input::placeholder,
 [data-testid="stChatInput"] textarea::placeholder {
-    color: #526174 !important;
-    -webkit-text-fill-color: #526174 !important;
+    color: #aab3bf !important;
+    -webkit-text-fill-color: #aab3bf !important;
     opacity: 1;
 }
 [data-testid="stFileUploader"] {
-    background: #f9fafb;
-    border: 1px dashed #aeb9c7;
+    background: #101317;
+    border: 1px dashed #414a57;
     border-radius: 12px;
 }
 hr {
-    border-color: #cbd3dd;
+    border-color: #292f38;
 }
 [data-testid="stCaptionContainer"] {
-    color: #526174 !important;
+    color: #aab3bf !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -204,65 +198,6 @@ st.markdown(
     "What would you like to explore today?</p>",
     unsafe_allow_html=True
 )
-
-# ---------- AI IMAGE UNDERSTANDING ----------
-with st.expander("🖼️ NOVA AI Image Understanding", expanded=True):
-    uploaded_image = st.file_uploader(
-        "Upload a picture for NOVA to understand",
-        type=["png", "jpg", "jpeg", "webp"],
-        key="nova_image"
-    )
-
-    if uploaded_image:
-        st.image(uploaded_image, caption="Uploaded image")
-
-        image_question = st.text_input(
-            "What would you like NOVA to know about this image?",
-            placeholder="Describe this picture..."
-        )
-
-        if st.button("✨ Ask NOVA about this image"):
-            try:
-                image_bytes = uploaded_image.getvalue()
-                base64_image = base64.b64encode(
-                    image_bytes
-                ).decode("utf-8")
-
-                mime_type = uploaded_image.type or "image/jpeg"
-
-                with st.spinner("NOVA is analyzing your image..."):
-                    response = client.chat.completions.create(
-                        model="qwen/qwen3.8-27b",
-                        messages=[
-                            {
-                                "role": "user",
-                                "content": [
-                                    {
-                                        "type": "text",
-                                        "text": image_question.strip()
-                                        or "Describe this image in detail."
-                                    },
-                                    {
-                                        "type": "image_url",
-                                        "image_url": {
-                                            "url": (
-                                                f"data:{mime_type};base64,"
-                                                f"{base64_image}"
-                                            )
-                                        }
-                                    }
-                                ]
-                            }
-                        ],
-                        max_completion_tokens=1024
-                    )
-
-                image_answer = response.choices[0].message.content
-                st.markdown("### ✨ NOVA's Image Analysis")
-                st.write(image_answer)
-
-            except Exception as error:
-                st.error("Image analysis failed: " + str(error))
 
 # ---------- QUICK PROMPTS ----------
 st.markdown("### ✨ Explore NOVA")
