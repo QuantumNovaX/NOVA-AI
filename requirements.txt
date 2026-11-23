@@ -1,2 +1,5 @@
-streamlit>=1.39.0
-groq>=1.0.0
+
+streamlit
+groq
+streamlit-mic-recorder
+requests
