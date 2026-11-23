@@ -13,41 +13,79 @@ st.set_page_config(
 # ---------- PREMIUM DESIGN ----------
 st.markdown("""
 <style>
+/* NOVA-AI — clean, understated, premium interface */
+:root {
+    color-scheme: light;
+}
 .stApp {
-    background: radial-gradient(circle at top, #211344, #080814 65%);
-    color: #ffffff;
+    background: #f5f7fa;
+    color: #172033;
+}
+[data-testid="stHeader"] {
+    background: rgba(245, 247, 250, 0.92);
 }
 [data-testid="stSidebar"] {
-    background: #0c0a1b;
-    border-right: 1px solid #5735a5;
+    background: #ffffff;
+    border-right: 1px solid #e5e9f0;
 }
-h1, h2, h3, p, label {
-    color: white;
+[data-testid="stSidebar"] * {
+    color: #263247;
+}
+h1, h2, h3, p, label, [data-testid="stMarkdownContainer"] {
+    color: #172033;
 }
 .nova-title {
     text-align: center;
-    font-size: 52px;
-    font-weight: 900;
-    background: linear-gradient(90deg,#a879ff,#48c9ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: clamp(36px, 5vw, 50px);
+    font-weight: 750;
+    letter-spacing: -1.8px;
+    color: #14243a;
+    margin-top: 0.25rem;
 }
 .subtitle {
     text-align: center;
-    color: #c3b5e8;
-    letter-spacing: 2px;
+    color: #68778d;
+    letter-spacing: 2.4px;
+    font-size: 11px;
+    font-weight: 650;
 }
 div.stButton > button {
-    background: linear-gradient(90deg,#713bdb,#246cdb);
-    color: white;
-    border: 1px solid #a17aff;
-    border-radius: 12px;
-    width: 100%;
+    background: #183b56;
+    color: #ffffff;
+    border: 1px solid #183b56;
+    border-radius: 10px;
+    min-height: 42px;
+    font-weight: 600;
+    transition: background 150ms ease, border-color 150ms ease;
+}
+div.stButton > button:hover {
+    background: #245675;
+    border-color: #245675;
+    color: #ffffff;
 }
 div[data-testid="stChatMessage"] {
-    background: rgba(70,50,120,0.18);
-    border: 1px solid rgba(150,120,255,0.2);
-    border-radius: 15px;
+    background: #ffffff;
+    border: 1px solid #e6ebf1;
+    border-radius: 14px;
+    padding: 0.85rem 1rem;
+    box-shadow: 0 2px 10px rgba(24, 43, 67, 0.035);
+}
+[data-testid="stChatInput"] {
+    background: #ffffff;
+    border: 1px solid #dce3ec;
+    border-radius: 12px;
+}
+[data-testid="stFileUploader"] {
+    background: #ffffff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 0.5rem;
+}
+hr {
+    border-color: #e6ebf1;
+}
+small, [data-testid="stCaptionContainer"] {
+    color: #718096 !important;
 }
 </style>
 """, unsafe_allow_html=True)
