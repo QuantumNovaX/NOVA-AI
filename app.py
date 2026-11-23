@@ -48,7 +48,8 @@ defaults = {
     "messages": [],
     "memory": [],
     "language": "English",
-    "mode": "Chat",
+    "auto_speak": True,
+    "pending_speech": False,
     "quick_prompt": None,
     "last_voice_answer": "",
     "last_voice_transcript": "",
@@ -166,7 +167,7 @@ def browser_speech_button(text, language):
       const spokenLang = {json.dumps(lang)};
       const button = document.getElementById("speakNova");
       const status = document.getElementById("speechStatus");
-      button.addEventListener("click", () => {{
+      function speakNovaReply() {{
         if (!("speechSynthesis" in window)) {{
           status.textContent = "Speech playback is not supported in this browser.";
           return;
@@ -177,9 +178,12 @@ def browser_speech_button(text, language):
         utterance.rate = 1.0;
         utterance.onstart = () => status.textContent = "NOVA is speaking…";
         utterance.onend = () => status.textContent = "Finished speaking.";
-        utterance.onerror = () => status.textContent = "Could not play this voice. Try another browser voice.";
+        utterance.onerror = () => status.textContent = "Autoplay was blocked or no suitable voice is installed. Tap replay.";
         window.speechSynthesis.speak(utterance);
-      }});
+      }}
+      button.addEventListener("click", speakNovaReply);
+      // Try automatic playback for new replies; the button remains as a fallback.
+      setTimeout(speakNovaReply, 250);
     </script>
     """
     components.html(html, height=92)
@@ -195,23 +199,23 @@ def handle_message(user_text, voice=False):
         answer = get_ai_answer(user_text, use_search=st.session_state.web_search)
         st.session_state.messages.append({"role": "assistant", "content": answer})
 
-        if voice:
-            st.session_state.last_voice_transcript = user_text
-            st.session_state.last_voice_answer = answer
-            st.session_state.last_voice_audio = None
-            if st.session_state.language == "English":
-                try:
-                    st.session_state.last_voice_audio = make_english_speech(answer)
-                except Exception:
-                    # Browser speech button remains available if Groq TTS is unavailable.
-                    st.session_state.last_voice_audio = None
+        # Keep the latest answer ready for speech whether the user typed or spoke.
+        st.session_state.last_voice_transcript = user_text
+        st.session_state.last_voice_answer = answer
+        st.session_state.last_voice_audio = None
+        st.session_state.pending_speech = bool(st.session_state.auto_speak)
+        if st.session_state.auto_speak and st.session_state.language == "English":
+            try:
+                st.session_state.last_voice_audio = make_english_speech(answer)
+            except Exception:
+                # Browser speech remains available as a fallback.
+                st.session_state.last_voice_audio = None
     except Exception as exc:
         error_message = f"NOVA connection error: {exc}"
         st.session_state.messages.append({"role": "assistant", "content": error_message})
-        if voice:
-            st.session_state.last_voice_transcript = user_text
-            st.session_state.last_voice_answer = error_message
-            st.session_state.last_voice_audio = None
+        st.session_state.last_voice_transcript = user_text
+        st.session_state.last_voice_answer = error_message
+        st.session_state.last_voice_audio = None
 
 
 # -------------------- DESIGN --------------------
@@ -277,13 +281,11 @@ with st.sidebar:
     st.caption("YOUR PERSONAL AI ASSISTANT")
     st.divider()
 
-    st.markdown("### Interface")
-    st.session_state.mode = st.radio(
-        "Choose interface",
-        ["Chat", "Voice"],
-        index=0 if st.session_state.mode == "Chat" else 1,
-        horizontal=True,
-        label_visibility="collapsed",
+    st.markdown("### 🔊 Voice replies")
+    st.session_state.auto_speak = st.toggle(
+        "Speak every NOVA reply",
+        value=st.session_state.auto_speak,
+        help="When enabled, NOVA will try to speak replies to both typed and spoken messages.",
     )
 
     st.divider()
@@ -349,121 +351,88 @@ st.markdown('<div class="subtitle">YOUR SMART PERSONAL AI ASSISTANT</div>', unsa
 st.write("")
 
 
-# -------------------- VOICE MODE --------------------
+# -------------------- UNIFIED CHAT + VOICE --------------------
 
-if st.session_state.mode == "Voice":
-    st.markdown("""
-    <div class="voice-panel">
-      <div class="voice-orb"></div>
-      <h2 style="margin:0;color:#fff;">NOVA Voice</h2>
-      <p class="voice-hint">Speak naturally. NOVA will listen, think and reply.</p>
-    </div>
-    """, unsafe_allow_html=True)
+st.markdown("<h2 style='text-align:center'>Welcome to NOVA ✨</h2>", unsafe_allow_html=True)
+st.markdown(
+    "<p style='text-align:center;color:#bba9ed'>Type or speak. NOVA can reply in text and voice.</p>",
+    unsafe_allow_html=True,
+)
 
-    st.caption("1. Tap the microphone and record your message. 2. Stop recording. 3. Send it to NOVA.")
-    audio_value = st.audio_input(
-        "🎙️ Record your message",
-        sample_rate=16000,
-        key="nova_voice_recorder",
-        help="Allow microphone access when your browser asks.",
-    )
+st.markdown("### ✨ Explore NOVA")
+col1, col2, col3 = st.columns(3)
+if col1.button("💡 Explain something"):
+    st.session_state.quick_prompt = "Explain an interesting topic to me."
+    st.rerun()
+if col2.button("✍️ Help me write"):
+    st.session_state.quick_prompt = "Help me write something."
+    st.rerun()
+if col3.button("💻 Coding help"):
+    st.session_state.quick_prompt = "Help me with a coding problem."
+    st.rerun()
 
-    send_col, clear_col = st.columns(2)
+# Conversation history stays in the main chat area.
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# One composer: text field + microphone recorder + send button.
+# Streamlit's native chat_input cannot contain a microphone widget, so these
+# controls are placed together in one compact row at the bottom of the chat.
+with st.form("nova_unified_composer", clear_on_submit=True):
+    text_col, mic_col, send_col = st.columns([7, 2, 1.5], vertical_alignment="bottom")
+    with text_col:
+        typed_message = st.text_input(
+            "Message NOVA-AI",
+            placeholder="Type your message...",
+            label_visibility="collapsed",
+        )
+    with mic_col:
+        recorded_audio = st.audio_input(
+            "🎙️",
+            sample_rate=16000,
+            label_visibility="collapsed",
+            key="nova_unified_audio",
+        )
     with send_col:
-        send_voice = st.button("Send to NOVA ➜", type="primary", use_container_width=True)
-    with clear_col:
-        clear_voice = st.button("Clear voice reply", use_container_width=True)
+        submitted = st.form_submit_button("➤ Send", use_container_width=True)
 
-    if clear_voice:
-        st.session_state.last_voice_answer = ""
-        st.session_state.last_voice_transcript = ""
-        st.session_state.last_voice_audio = None
+if submitted:
+    if typed_message and typed_message.strip():
+        with st.spinner("NOVA is thinking... ✨"):
+            handle_message(typed_message, voice=False)
         st.rerun()
-
-    if send_voice:
-        if audio_value is None:
-            st.warning("Record a message first.")
+    elif recorded_audio is not None:
+        current_hash = hashlib.sha256(recorded_audio.getvalue()).hexdigest()
+        if current_hash == st.session_state.last_audio_hash:
+            st.info("That recording was already sent. Record a new message to continue.")
         else:
-            audio_hash = hashlib.sha256(audio_value.getvalue()).hexdigest()
-            if audio_hash == st.session_state.last_audio_hash:
-                st.info("This recording was already sent. Record a new message to continue.")
-            else:
-                with st.spinner("NOVA is listening…"):
-                    try:
-                        transcript_text = transcribe_audio(audio_value)
-                        if not transcript_text:
-                            st.warning("I couldn't hear clear speech. Please try recording again.")
-                        else:
-                            st.session_state.last_audio_hash = audio_hash
-                            handle_message(transcript_text, voice=True)
-                            st.rerun()
-                    except Exception as exc:
-                        st.error(f"Voice transcription failed: {exc}")
-
-    if st.session_state.last_voice_answer:
-        st.divider()
-        st.markdown("#### You said")
-        st.info(st.session_state.last_voice_transcript)
-        st.markdown("#### NOVA replied")
-        st.markdown(st.session_state.last_voice_answer)
-
-        if st.session_state.last_voice_audio:
-            st.caption("NOVA voice reply (English)")
-            st.audio(st.session_state.last_voice_audio, format="audio/wav")
-        else:
-            browser_speech_button(
-                st.session_state.last_voice_answer,
-                st.session_state.language,
-            )
-
-    with st.expander("Recent conversation"):
-        for message in st.session_state.messages[-10:]:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-
-
-# -------------------- CHAT MODE --------------------
-
-else:
-    st.markdown("<h2 style='text-align:center'>Welcome to NOVA ✨</h2>", unsafe_allow_html=True)
-    st.markdown(
-        "<p style='text-align:center;color:#bba9ed'>What would you like to explore today?</p>",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("### ✨ Explore NOVA")
-    col1, col2, col3 = st.columns(3)
-
-    if col1.button("💡 Explain something"):
-        st.session_state.quick_prompt = "Explain an interesting topic to me."
-        st.rerun()
-    if col2.button("✍️ Help me write"):
-        st.session_state.quick_prompt = "Help me write something."
-        st.rerun()
-    if col3.button("💻 Coding help"):
-        st.session_state.quick_prompt = "Help me with a coding problem."
-        st.rerun()
-
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-    prompt = st.chat_input("✨ Message NOVA-AI...")
-    if st.session_state.quick_prompt:
-        prompt = st.session_state.quick_prompt
-        st.session_state.quick_prompt = None
-
-    if prompt:
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
-        with st.chat_message("assistant"):
-            with st.spinner("NOVA is thinking... ✨"):
+            with st.spinner("NOVA is listening…"):
                 try:
-                    answer = get_ai_answer(prompt, use_search=st.session_state.web_search)
-                    st.markdown(answer)
-                    st.session_state.messages.append({"role": "assistant", "content": answer})
+                    transcript_text = transcribe_audio(recorded_audio)
+                    if not transcript_text:
+                        st.warning("I couldn't hear clear speech. Please record again.")
+                    else:
+                        st.session_state.last_audio_hash = current_hash
+                        handle_message(transcript_text, voice=True)
+                        st.rerun()
                 except Exception as exc:
-                    st.error(f"NOVA connection error: {exc}")
+                    st.error(f"Voice transcription failed: {exc}")
+    else:
+        st.warning("Type a message or record your voice first.")
+
+# Speak the latest answer automatically when possible. Browser autoplay can be
+# restricted by the device; the visible replay button is the fallback.
+if st.session_state.pending_speech and st.session_state.messages:
+    latest_assistant = next(
+        (m["content"] for m in reversed(st.session_state.messages) if m["role"] == "assistant"),
+        "",
+    )
+    if latest_assistant and st.session_state.auto_speak:
+        if st.session_state.last_voice_audio:
+            st.audio(st.session_state.last_voice_audio, format="audio/wav", autoplay=True)
+        else:
+            browser_speech_button(latest_assistant, st.session_state.language)
+    st.session_state.pending_speech = False
+
 
