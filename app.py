@@ -13,79 +13,98 @@ st.set_page_config(
 # ---------- PREMIUM DESIGN ----------
 st.markdown("""
 <style>
-/* NOVA-AI — clean, understated, premium interface */
+/* NOVA-AI — soft neutral theme with strong text contrast */
 :root {
     color-scheme: light;
 }
 .stApp {
-    background: #f5f7fa;
-    color: #172033;
+    background: #eef1f5;
+    color: #182230;
 }
 [data-testid="stHeader"] {
-    background: rgba(245, 247, 250, 0.92);
+    background: rgba(238, 241, 245, 0.96);
 }
 [data-testid="stSidebar"] {
-    background: #ffffff;
-    border-right: 1px solid #e5e9f0;
+    background: #e5eaf0;
+    border-right: 1px solid #cbd3dd;
 }
 [data-testid="stSidebar"] * {
-    color: #263247;
+    color: #182230 !important;
 }
-h1, h2, h3, p, label, [data-testid="stMarkdownContainer"] {
-    color: #172033;
+.stApp, .stApp p, .stApp label, .stApp span,
+.stApp li, .stApp [data-testid="stMarkdownContainer"] {
+    color: #182230;
+}
+h1, h2, h3, h4 {
+    color: #142235 !important;
 }
 .nova-title {
     text-align: center;
     font-size: clamp(36px, 5vw, 50px);
     font-weight: 750;
-    letter-spacing: -1.8px;
-    color: #14243a;
+    letter-spacing: -1.5px;
+    color: #142235 !important;
     margin-top: 0.25rem;
 }
 .subtitle {
     text-align: center;
-    color: #68778d;
-    letter-spacing: 2.4px;
+    color: #526174 !important;
+    letter-spacing: 2px;
     font-size: 11px;
     font-weight: 650;
 }
 div.stButton > button {
-    background: #183b56;
-    color: #ffffff;
-    border: 1px solid #183b56;
+    background: #24445f;
+    color: #ffffff !important;
+    border: 1px solid #24445f;
     border-radius: 10px;
     min-height: 42px;
     font-weight: 600;
-    transition: background 150ms ease, border-color 150ms ease;
 }
 div.stButton > button:hover {
-    background: #245675;
-    border-color: #245675;
-    color: #ffffff;
+    background: #315c7d;
+    border-color: #315c7d;
 }
 div[data-testid="stChatMessage"] {
-    background: #ffffff;
-    border: 1px solid #e6ebf1;
+    background: #f9fafb;
+    border: 1px solid #d6dde6;
     border-radius: 14px;
     padding: 0.85rem 1rem;
-    box-shadow: 0 2px 10px rgba(24, 43, 67, 0.035);
+}
+div[data-testid="stChatMessage"] * {
+    color: #182230 !important;
 }
 [data-testid="stChatInput"] {
     background: #ffffff;
-    border: 1px solid #dce3ec;
+    border: 1px solid #cbd3dd;
     border-radius: 12px;
+}
+[data-testid="stChatInput"] textarea {
+    color: #182230 !important;
+    -webkit-text-fill-color: #182230 !important;
+}
+[data-testid="stTextInput"] input,
+[data-testid="stSelectbox"] div,
+[data-testid="stFileUploader"] {
+    color: #182230 !important;
+}
+[data-testid="stTextInput"] input,
+[data-testid="stTextInput"] input::placeholder,
+[data-testid="stChatInput"] textarea::placeholder {
+    color: #526174 !important;
+    -webkit-text-fill-color: #526174 !important;
+    opacity: 1;
 }
 [data-testid="stFileUploader"] {
-    background: #ffffff;
-    border: 1px dashed #cbd5e1;
+    background: #f9fafb;
+    border: 1px dashed #aeb9c7;
     border-radius: 12px;
-    padding: 0.5rem;
 }
 hr {
-    border-color: #e6ebf1;
+    border-color: #cbd3dd;
 }
-small, [data-testid="stCaptionContainer"] {
-    color: #718096 !important;
+[data-testid="stCaptionContainer"] {
+    color: #526174 !important;
 }
 </style>
 """, unsafe_allow_html=True)
