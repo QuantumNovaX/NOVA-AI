@@ -6,6 +6,7 @@ import base64
 import requests
 import streamlit as st
 from groq import Groq
+from huggingface_hub import InferenceClient
 from streamlit_mic_recorder import speech_to_text
 
 # =====================================================
@@ -218,6 +219,21 @@ def read_document(upload):
 # =====================================================
 
 def generate_image(prompt):
+    try:
+        hf_token = st.secrets["HF_TOKEN"]
+
+        client = InferenceClient(api_key=hf_token)
+
+        image = client.text_to_image(
+            prompt=prompt,
+            model="black-forest-labs/FLUX.1-dev"
+        )
+
+        return image
+
+    except Exception as e:
+        st.error(f"Image generation failed: {e}")
+        return None
     if not HF_TOKEN:
         return None, "Add HF_TOKEN in Streamlit Secrets."
 
