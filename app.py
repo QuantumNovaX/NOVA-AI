@@ -123,70 +123,135 @@ def get_groq():
 # -------------------- AUTHENTICATION -----------------------
 
 def login_screen():
-    st.title("NOVA-AI")
-    st.caption("Your personal AI assistant")
 
-    st.subheader("Login")
+    if "auth_page" not in st.session_state:
+        st.session_state.auth_page = "login"
 
-    email = st.text_input("Email address", key="login_email")
-    password = st.text_input(
-        "Password",
-        type="password",
-        key="login_password"
-    )
+    st.markdown("""
+        <style>
+        .auth-box {
+            max-width: 420px;
+            margin: 35px auto;
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
-    if st.button("Login", use_container_width=True):
-        try:
-            sb = get_supabase()
-            result = sb.auth.sign_in_with_password({
-                "email": email.strip(),
-                "password": password
-            })
+    left, center, right = st.columns([1, 2, 1])
 
-            if result.user:
-                st.session_state.user_id = str(result.user.id)
-                st.session_state.user_email = result.user.email
-                st.session_state.active_chat = None
-                st.session_state.messages = []
+    with center:
+
+        # LOGIN PAGE
+        if st.session_state.auth_page == "login":
+
+            st.title("NOVA-AI")
+            st.caption("Your personal AI assistant")
+            st.subheader("Sign in")
+
+            email = st.text_input("Email address", key="login_email")
+            password = st.text_input(
+                "Password",
+                type="password",
+                key="login_password"
+            )
+
+            if st.button("Sign in", use_container_width=True):
+                try:
+                    sb = get_supabase()
+                    result = sb.auth.sign_in_with_password({
+                        "email": email.strip(),
+                        "password": password
+                    })
+
+                    if result.user:
+                        st.session_state.user_id = str(result.user.id)
+                        st.session_state.user_email = result.user.email
+                        st.session_state.active_chat = None
+                        st.session_state.messages = []
+                        st.rerun()
+
+                except Exception as e:
+                    st.error(f"Login failed: {e}")
+
+            if st.button("Forgot password?", type="secondary"):
+                st.session_state.auth_page = "reset"
                 st.rerun()
 
-        except Exception as e:
-            st.error(f"Login failed: {e}")
+            if st.button("Create account", type="secondary"):
+                st.session_state.auth_page = "signup"
+                st.rerun()
 
-    st.divider()
+        # CREATE ACCOUNT PAGE
+        elif st.session_state.auth_page == "signup":
 
-    st.subheader("Create Account")
+            st.title("Create account")
+            st.caption("Join NOVA-AI")
 
-    new_email = st.text_input("Email address", key="signup_email")
-    new_password = st.text_input(
-        "Create password",
-        type="password",
-        key="signup_password"
-    )
+            new_email = st.text_input("Email address", key="signup_email")
+            new_password = st.text_input(
+                "Create password",
+                type="password",
+                key="signup_password"
+            )
+            confirm_password = st.text_input(
+                "Confirm password",
+                type="password",
+                key="confirm_password"
+            )
 
-    if st.button("Create Account", use_container_width=True):
-        if len(new_password) < 8:
-            st.warning("Password must contain at least 8 characters.")
-        else:
-            try:
-                sb = get_supabase()
-                result = sb.auth.sign_up({
-                    "email": new_email.strip(),
-                    "password": new_password
-                })
-
-                if result.session and result.user:
-                    st.session_state.user_id = str(result.user.id)
-                    st.session_state.user_email = result.user.email
-                    st.rerun()
+            if st.button("Create account", use_container_width=True):
+                if len(new_password) < 8:
+                    st.warning("Password must contain at least 8 characters.")
+                elif new_password != confirm_password:
+                    st.error("Passwords do not match.")
                 else:
-                    st.success(
-                        "Account created! Verify your email, "
-                        "then log in."
-                    )
+                    try:
+                        sb = get_supabase()
+                        result = sb.auth.sign_up({
+                            "email": new_email.strip(),
+                            "password": new_password
+                        })
 
-            except Exception as e:
-                st.error(f"Account creation failed: {e}")
+                        if result.session and result.user:
+                            st.session_state.user_id = str(result.user.id)
+                            st.session_state.user_email = result.user.email
+                            st.rerun()
+                        else:
+                            st.success(
+                                "Account created. Check your email "
+                                "to verify your account, then sign in."
+                            )
+
+                    except Exception as e:
+                        st.error(f"Signup failed: {e}")
+
+            if st.button("Back to login"):
+                st.session_state.auth_page = "login"
+                st.rerun()
+
+        # FORGOT PASSWORD PAGE
+        elif st.session_state.auth_page == "reset":
+
+            st.title("Reset password")
+            st.caption("We'll send a password reset email.")
+
+            reset_email = st.text_input(
+                "Your email address",
+                key="reset_email"
+            )
+
+            if st.button("Send reset link", use_container_width=True):
+                try:
+                    sb = get_supabase()
+                    sb.auth.reset_password_for_email(reset_email.strip())
+                    st.success("If the account exists, a reset email will be sent.")
+
+                except Exception as e:
+                    st.error(f"Could not send reset email: {e}")
+
+            if st.button("Back to login"):
+                st.session_state.auth_page = "login"
+                st.rerun()
+                        
                 
 
 
