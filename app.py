@@ -186,44 +186,35 @@ def login_screen():
 
         # CREATE ACCOUNT PAGE
         elif st.session_state.auth_page == "signup":
-
-            st.title("Create account")
-            st.caption("Join NOVA-AI")
-
-            new_email = st.text_input("Email address", key="signup_email")
-            new_password = st.text_input(
-                "Create password",
-                type="password",
-                key="signup_password"
-            )
-            confirm_password = st.text_input(
-                "Confirm password",
-                type="password",
-                key="confirm_password"
-            )
-
             if st.button("Create account", use_container_width=True):
+
                 if len(new_password) < 8:
                     st.warning("Password must contain at least 8 characters.")
+
                 elif new_password != confirm_password:
                     st.error("Passwords do not match.")
+
                 else:
                     try:
                         sb = get_supabase()
+
                         result = sb.auth.sign_up({
                             "email": new_email.strip(),
                             "password": new_password
                         })
 
-                        st.session_state.auth_page = "login"
-st.session_state.signup_notice = (
-    "Account created successfully! Please sign in."
-)
-st.rerun()
+                        if result.user:
+                            st.session_state.auth_page = "login"
+                            st.session_state.signup_notice = (
+                                "Account created! Please verify your email "
+                                "if required, then sign in."
+                            )
+                            st.rerun()
+                        else:
+                            st.error("Account creation failed.")
 
                     except Exception as e:
                         st.error(f"Signup failed: {e}")
-
             if st.button("Back to login"):
                 st.session_state.auth_page = "login"
                 st.rerun()
