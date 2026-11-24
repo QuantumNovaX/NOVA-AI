@@ -146,6 +146,9 @@ def login_screen():
             st.title("NOVA-AI")
             st.caption("Your personal AI assistant")
             st.subheader("Sign in")
+            if st.session_state.get("signup_notice"):
+    st.success(st.session_state.signup_notice)
+    del st.session_state.signup_notice
 
             email = st.text_input("Email address", key="login_email")
             password = st.text_input(
@@ -211,15 +214,11 @@ def login_screen():
                             "password": new_password
                         })
 
-                        if result.session and result.user:
-                            st.session_state.user_id = str(result.user.id)
-                            st.session_state.user_email = result.user.email
-                            st.rerun()
-                        else:
-                            st.success(
-                                "Account created. Check your email "
-                                "to verify your account, then sign in."
-                            )
+                        st.session_state.auth_page = "login"
+st.session_state.signup_notice = (
+    "Account created successfully! Please sign in."
+)
+st.rerun()
 
                     except Exception as e:
                         st.error(f"Signup failed: {e}")
