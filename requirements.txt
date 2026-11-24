@@ -1,8 +1,10 @@
+
 streamlit
 groq
-streamlit-mic-recorder
+supabase
 requests
+huggingface_hub
+streamlit-mic-recorder
 pypdf
 python-docx
 Pillow
-huggingface_hub
