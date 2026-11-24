@@ -485,30 +485,36 @@ for index, message in enumerate(st.session_state.messages):
 # =====================================================
 
 with st.expander("🎨 Create an image"):
+
     image_prompt = st.text_area(
         "Describe the image you want",
         placeholder="A futuristic city at sunset..."
     )
 
     if st.button("Generate image"):
-    if image_prompt.strip():
-        with st.spinner("Creating your image..."):
-            generated_image = generate_image(image_prompt)
 
-        if generated_image is not None:
-            st.image(generated_image, caption=image_prompt)
+        if image_prompt.strip():
 
-            from io import BytesIO
+            with st.spinner("Creating your image..."):
 
-            image_buffer = BytesIO()
-            generated_image.save(image_buffer, format="PNG")
+                generated_image = generate_image(image_prompt)
 
-            st.download_button(
-                "Download image",
-                image_buffer.getvalue(),
-                file_name="nova_generated_image.png",
-                mime="image/png"
-            )
+            if generated_image is not None:
+
+                st.image(
+                    generated_image,
+                    caption=image_prompt
+                )
+
+                image_buffer = io.BytesIO()
+                generated_image.save(image_buffer, format="PNG")
+
+                st.download_button(
+                    "Download image",
+                    image_buffer.getvalue(),
+                    file_name="nova_generated_image.png",
+                    mime="image/png"
+                )
 # =====================================================
 # UPLOADS
 # =====================================================
