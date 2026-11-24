@@ -234,30 +234,8 @@ def generate_image(prompt):
     except Exception as e:
         st.error(f"Image generation failed: {e}")
         return None
-    if not HF_TOKEN:
-        return None, "Add HF_TOKEN in Streamlit Secrets."
 
-    try:
-        response = requests.post(
-            "https://router.huggingface.co/v1/images/generations",
-            headers={
-                "Authorization": f"Bearer {HF_TOKEN}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "black-forest-labs/FLUX.1-schnell",
-                "prompt": prompt
-            },
-            timeout=180
-        )
-
-        response.raise_for_status()
-
-        return response.content, None
-
-    except Exception as error:
-        return None, str(error)
-
+    
 # =====================================================
 # TEXT TO SPEECH
 # =====================================================
@@ -513,21 +491,24 @@ with st.expander("🎨 Create an image"):
     )
 
     if st.button("Generate image"):
-        if image_prompt.strip():
-            with st.spinner("Creating your image..."):
-                image_bytes, error = generate_image(image_prompt)
+    if image_prompt.strip():
+        with st.spinner("Creating your image..."):
+            generated_image = generate_image(image_prompt)
 
-            if image_bytes:
-                st.image(image_bytes, caption=image_prompt)
-                st.download_button(
-                    "Download image",
-                    image_bytes,
-                    file_name="nova_generated_image.png",
-                    mime="image/png"
-                )
-            else:
-                st.error(error)
+        if generated_image is not None:
+            st.image(generated_image, caption=image_prompt)
 
+            from io import BytesIO
+
+            image_buffer = BytesIO()
+            generated_image.save(image_buffer, format="PNG")
+
+            st.download_button(
+                "Download image",
+                image_buffer.getvalue(),
+                file_name="nova_generated_image.png",
+                mime="image/png"
+            )
 # =====================================================
 # UPLOADS
 # =====================================================
