@@ -123,68 +123,71 @@ def get_groq():
 # -------------------- AUTHENTICATION -----------------------
 
 def login_screen():
-    st.title("✨ NOVA-AI")
+    st.title("NOVA-AI")
     st.caption("Your personal AI assistant")
 
-    tab_login, tab_signup = st.tabs(["Login", "Create account"])
+    st.subheader("Login")
 
-    with tab_login:
-        email = st.text_input("Email address", key="login_email")
-        password = st.text_input(
-            "Password",
-            type="password",
-            key="login_password"
-        )
+    email = st.text_input("Email address", key="login_email")
+    password = st.text_input(
+        "Password",
+        type="password",
+        key="login_password"
+    )
 
-        if st.button("Login", use_container_width=True):
+    if st.button("Login", use_container_width=True):
+        try:
+            sb = get_supabase()
+            result = sb.auth.sign_in_with_password({
+                "email": email.strip(),
+                "password": password
+            })
+
+            if result.user:
+                st.session_state.user_id = str(result.user.id)
+                st.session_state.user_email = result.user.email
+                st.session_state.active_chat = None
+                st.session_state.messages = []
+                st.rerun()
+
+        except Exception as e:
+            st.error(f"Login failed: {e}")
+
+    st.divider()
+
+    st.subheader("Create Account")
+
+    new_email = st.text_input("Email address", key="signup_email")
+    new_password = st.text_input(
+        "Create password",
+        type="password",
+        key="signup_password"
+    )
+
+    if st.button("Create Account", use_container_width=True):
+        if len(new_password) < 8:
+            st.warning("Password must contain at least 8 characters.")
+        else:
             try:
                 sb = get_supabase()
-                result = sb.auth.sign_in_with_password({
-                    "email": email.strip(),
-                    "password": password
+                result = sb.auth.sign_up({
+                    "email": new_email.strip(),
+                    "password": new_password
                 })
 
-                if result.user:
+                if result.session and result.user:
                     st.session_state.user_id = str(result.user.id)
                     st.session_state.user_email = result.user.email
-                    st.session_state.active_chat = None
-                    st.session_state.messages = []
                     st.rerun()
+                else:
+                    st.success(
+                        "Account created! Verify your email, "
+                        "then log in."
+                    )
 
             except Exception as e:
-                st.error(f"Login failed: {e}")
-
-    with tab_signup:
-        new_email = st.text_input("Your email", key="signup_email")
-        new_password = st.text_input(
-            "Create password",
-            type="password",
-            key="signup_password"
-        )
-
-        if st.button("Create account", use_container_width=True):
-            if len(new_password) < 8:
-                st.warning("Use a password with at least 8 characters.")
-            else:
-                try:
-                    sb = get_supabase()
-                    result = sb.auth.sign_up({
-                        "email": new_email.strip(),
-                        "password": new_password
-                    })
-
-                    if result.session and result.user:
-                        st.session_state.user_id = str(result.user.id)
-                        st.session_state.user_email = result.user.email
-                        st.rerun()
-                    else:
-                        st.success(
-                            "Account created. Check your email for "
-                            "the confirmation link, then log in."
-                        )
-
-                except Exception as e:
-                    st.error(f"Account creation failed: {e}")
+                st.error(f"Account creation failed: {e}")
+                
 
 
 # -------------------- DATABASE ------------------------------
