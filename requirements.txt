@@ -5,3 +5,4 @@ requests
 pypdf
 python-docx
 Pillow
+huggingface_hub
