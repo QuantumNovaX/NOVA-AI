@@ -141,12 +141,13 @@ def login_screen():
     with center:
 
         # LOGIN PAGE
-        if st.session_state.auth_page == "login":
+                if st.session_state.auth_page == "login":
 
             st.title("NOVA-AI")
             st.caption("Your personal AI assistant")
             st.subheader("Sign in")
-                        if st.session_state.get("signup_notice"):
+
+            if st.session_state.get("signup_notice"):
                 st.success(st.session_state.signup_notice)
                 del st.session_state.signup_notice
 
