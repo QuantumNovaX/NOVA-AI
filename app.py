@@ -146,9 +146,9 @@ def login_screen():
             st.title("NOVA-AI")
             st.caption("Your personal AI assistant")
             st.subheader("Sign in")
-            if st.session_state.get("signup_notice"):
-    st.success(st.session_state.signup_notice)
-    del st.session_state.signup_notice
+                        if st.session_state.get("signup_notice"):
+                st.success(st.session_state.signup_notice)
+                del st.session_state.signup_notice
 
             email = st.text_input("Email address", key="login_email")
             password = st.text_input(
