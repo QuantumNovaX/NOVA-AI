@@ -186,6 +186,24 @@ def login_screen():
 
         # CREATE ACCOUNT PAGE
         elif st.session_state.auth_page == "signup":
+                        st.title("Create account")
+            st.caption("Join NOVA-AI")
+
+            new_email = st.text_input(
+                "Email address", key="signup_email"
+            )
+
+            new_password = st.text_input(
+                "Create password",
+                type="password",
+                key="signup_password"
+            )
+
+            confirm_password = st.text_input(
+                "Confirm password",
+                type="password",
+                key="confirm_password"
+            )
             if st.button("Create account", use_container_width=True):
 
                 if len(new_password) < 8:
